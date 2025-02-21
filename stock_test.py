@@ -20,7 +20,6 @@ def check_stock(symbol, date, interval='5m'):
     except Exception as e:
         print(f"Error fetching data for {symbol}: {e}")
         return False
-    print(data)
 
     if data.empty:
         return False
@@ -30,6 +29,7 @@ def check_stock(symbol, date, interval='5m'):
     
     # Filter regular market hours (9:30 AM to 4:00 PM)
     data = data.between_time('09:30', '16:00')
+    print(data)
     
     if data.empty:
         return False
@@ -40,8 +40,8 @@ def check_stock(symbol, date, interval='5m'):
     # Calculate high percentage
     data['high_pct'] = (data['High'] - O) / O * 100
     
-    # Find peaks (>10%)
-    peaks = data[data['high_pct'] > 10]
+    # Find peaks (>5%)
+    peaks = data[data['high_pct'] > 5]
     if peaks.empty:
         return False
     
@@ -53,8 +53,12 @@ def check_stock(symbol, date, interval='5m'):
     if len(post_peak) < window_size:
         return False
     
+    print(post_peak)
+    
     # Check price containment
-    post_peak['in_range'] = (post_peak['Low'] >= O * 1.06) & (post_peak['High'] <= O * 1.08)
+    post_peak['in_range'] = (post_peak['Low'] >= O * 1.03) & ((post_peak['High'] <= O * 1.05) | (post_peak['High'] > post_peak['Open']))
+
+    print(post_peak)
     
     # Check for consecutive window
     post_peak['rolling_sum'] = post_peak['in_range'].rolling(window=window_size, min_periods=window_size).sum()
@@ -63,7 +67,7 @@ def check_stock(symbol, date, interval='5m'):
 
 # Example usage
 if __name__ == "__main__":
-    symbols = ['AAPL', 'MSFT', 'GOOG', 'AMZN', 'TSLA', 'META']
+    symbols = ['ON']
     target_date = datetime.now().date() - timedelta(days=1)  # Yesterday's data
     
     print(f"Checking stocks for {target_date}")
